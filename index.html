@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONO IT Support Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: url('work-table2.jpg') center center / cover no-repeat fixed;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .custom-input {
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #CBD5E1;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .custom-input:focus {
+            background-color: #FFFFFF;
+            border-color: #1E3A8A;
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15);
+            outline: none;
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 md:p-8 min-h-screen">
+
+    <div class="glass-card w-full max-w-lg rounded-2xl p-6 md:p-8 text-gray-800 relative my-auto">
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-900 text-white rounded-xl mb-3 shadow-md">
+                <i class="fa-solid fa-headset text-xl"></i>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-blue-950">ONO IT Support</h1>
+            <p class="text-xs md:text-sm font-medium text-gray-600 tracking-wide mt-1">
+                Orthopaedics • Neurology • Ophthalmology
+            </p>
+        </div>
+
+        <div class="bg-white/70 border border-gray-200/80 rounded-xl p-4 mb-6 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-700">
+                    Current IT Availability <span class="text-xs text-green-800 font-normal">(Live)</span>
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button id="refreshAvailabilityBtn" title="Refresh Availability" class="text-gray-400 hover:text-blue-900 text-xs">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button id="configToggleBtn" title="Portal Settings" class="text-gray-400 hover:text-blue-900 text-xs">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+            </div>
+            <p id="availabilityInfo" class="text-[11px] text-gray-500 mb-2">Connect Microsoft 365 to load live calendar availability.</p>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-100">
+                    <div class="flex items-center gap-2.5">
+                        <span id="darinDot" class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+                        <span class="text-sm font-medium text-gray-800">Darin</span>
+                    </div>
+                    <span id="darinStatus" class="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-200">
+                        <i class="fa-solid fa-circle-question text-gray-500"></i> Unknown
+                    </span>
+                </div>
+
+                <div class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-gray-100">
+                    <div class="flex items-center gap-2.5">
+                        <span id="jacqueDot" class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+                        <span class="text-sm font-medium text-gray-800">Jacque</span>
+                    </div>
+                    <span id="jacqueStatus" class="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-50 px-2.5 py-1 rounded-md border border-gray-200">
+                        <i class="fa-solid fa-circle-question text-gray-500"></i> Unknown
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h2 class="text-lg font-bold text-blue-950 mb-3 border-b border-gray-200 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-paper-plane text-blue-800 text-sm"></i> Submit IT Request
+            </h2>
+
+            <form id="ticketForm" class="space-y-4">
+                <div>
+                    <label for="issueDescription" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+                        Issue Description <span class="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        id="issueDescription"
+                        required
+                        rows="3"
+                        class="custom-input w-full rounded-lg p-3 text-sm text-gray-800 placeholder-gray-400"
+                        placeholder="Describe the issue..."></textarea>
+                </div>
+
+                <div>
+                    <label for="department" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+                        Department <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <select
+                            id="department"
+                            required
+                            class="custom-input w-full rounded-lg p-3 text-sm text-gray-800 appearance-none pr-10 cursor-pointer">
+                            <option value="" disabled selected>Select Department</option>
+                            <option value="Neurology">Neurology</option>
+                            <option value="Orthopaedics">Orthopaedics</option>
+                            <option value="Ophthalmology">Ophthalmology</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="buildingRoom" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+                        Building and Room #
+                    </label>
+                    <input
+                        type="text"
+                        id="buildingRoom"
+                        class="custom-input w-full rounded-lg p-3 text-sm text-gray-800 placeholder-gray-400"
+                        placeholder="Tell us where to find you">
+                </div>
+
+                <div>
+                    <label for="preferredContact" class="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">
+                        Preferred Contact Method
+                    </label>
+                    <div class="relative">
+                        <select
+                            id="preferredContact"
+                            class="custom-input w-full rounded-lg p-3 text-sm text-gray-800 appearance-none pr-10 cursor-pointer">
+                            <option value="Phone">Phone</option>
+                            <option value="Email">Email</option>
+                            <option value="Zoom">Zoom</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="w-full bg-blue-900 hover:bg-blue-950 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 mt-2 cursor-pointer">
+                    <span>Submit Request</span>
+                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center mt-6 pt-4 border-t border-gray-200/60 text-xs text-gray-500">
+            Internal IT Support Portal • Confidential
+        </div>
+    </div>
+
+    <div id="configModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <h3 class="text-lg font-bold text-gray-900 mb-2">Portal Settings</h3>
+            <p class="text-xs text-gray-600 mb-4">Configure Power Automate submission URL and Microsoft 365 calendar access.</p>
+
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Power Automate Webhook URL</label>
+            <input type="text" id="webhookUrlInput" class="w-full border rounded-lg p-2.5 text-xs font-mono text-gray-800 mb-3" placeholder="https://prod-xx.westus.logic.azure.com...">
+
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Microsoft Entra Tenant ID</label>
+            <input type="text" id="tenantIdInput" class="w-full border rounded-lg p-2.5 text-xs font-mono text-gray-800 mb-3" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+
+            <label class="block text-xs font-semibold text-gray-700 mb-1">App (Client) ID</label>
+            <input type="text" id="clientIdInput" class="w-full border rounded-lg p-2.5 text-xs font-mono text-gray-800 mb-3" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+
+            <label class="block text-xs font-semibold text-gray-700 mb-1">IT Calendar Emails (comma-separated)</label>
+            <input type="text" id="itEmailsInput" class="w-full border rounded-lg p-2.5 text-xs text-gray-800 mb-4" placeholder="darin@contoso.com,jacque@contoso.com">
+
+            <div class="flex justify-end gap-2">
+                <button id="closeConfigBtn" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
+                <button id="saveConfigBtn" class="px-4 py-2 text-xs font-semibold bg-blue-900 text-white rounded-lg hover:bg-blue-950">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="successModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl transform transition-all scale-100">
+            <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-1">Ticket Submitted!</h3>
+            <p class="text-xs text-gray-600 mb-6">Your support request has been sent to Darin & Jacque. An IT team member will contact you shortly.</p>
+            <button id="closeSuccessBtn" class="w-full bg-blue-900 hover:bg-blue-950 text-white text-sm font-semibold py-2.5 rounded-lg">
+                Close & Return
+            </button>
+        </div>
+    </div>
+
+    <script>
+    // Paste your Power Automate HTTP GET URL here once created
+    const AVAILABILITY_FLOW_URL = 'YOUR_POWER_AUTOMATE_HTTP_GET_URL_HERE';
+    const TICKET_FLOW_URL = 'YOUR_TICKET_SUBMISSION_URL_HERE';
+    const ticketForm = document.getElementById('ticketForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successModal = document.getElementById('successModal');
+    const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+    const configModal = document.getElementById('configModal');
+    const configToggleBtn = document.getElementById('configToggleBtn');
+    const refreshAvailabilityBtn = document.getElementById('refreshAvailabilityBtn');
+    const availabilityInfo = document.getElementById('availabilityInfo');
+    const webhookUrlInput = document.getElementById('webhookUrlInput');
+    const availabilityFlowUrlInput = document.getElementById('availabilityFlowUrlInput');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const closeConfigBtn = document.getElementById('closeConfigBtn');
+    const IT_NAMES = ['Darin', 'Jacque'];
+    function setStatus(person, state, detail = '') {
+        const dot = document.getElementById(`${person.toLowerCase()}Dot`);
+        const statusEl = document.getElementById(`${person.toLowerCase()}Status`);
+        const styles = {
+            available: {
+                dot: 'bg-green-500 pulse-dot',
+                badge: 'text-green-700 bg-green-50 border-green-200',
+                icon: 'fa-circle-check text-green-600',
+                text: detail || 'Available'
+            },
+            busy: {
+                dot: 'bg-red-500',
+                badge: 'text-red-700 bg-red-50 border-red-200',
+                icon: 'fa-calendar-xmark text-red-600',
+                text: detail || 'Busy'
+            },
+            tentative: {
+                dot: 'bg-yellow-500',
+                badge: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+                icon: 'fa-clock text-yellow-600',
+                text: detail || 'Tentative'
+            },
+            unknown: {
+                dot: 'bg-gray-400',
+                badge: 'text-gray-700 bg-gray-50 border-gray-200',
+                icon: 'fa-circle-question text-gray-500',
+                text: detail || 'Unknown'
+            }
+        };
+        const selected = styles[state] || styles.unknown;
+        dot.className = `w-2.5 h-2.5 rounded-full ${selected.dot}`;
+        statusEl.className = `inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md border ${selected.badge}`;
+        statusEl.innerHTML = `<i class="fa-solid ${selected.icon}"></i> ${selected.text}`;
+    }
+    async function refreshAvailability() {
+        IT_NAMES.forEach((name) => setStatus(name, 'unknown', 'Checking...'));
+        const targetUrl = AVAILABILITY_FLOW_URL !== 'YOUR_POWER_AUTOMATE_HTTP_GET_URL_HERE'
+            ? AVAILABILITY_FLOW_URL
+            : "https://ttuhscprod.sharepoint.com/sites/msteams_636f5b/_api/web/lists/getbytitle('IT Availability')/items";
+        try {
+            const response = await fetch(targetUrl, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json;odata=verbose' }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            const data = await response.json();
+            const items = data.d ? data.d.results : (Array.isArray(data) ? data : (data.value || []));
+            IT_NAMES.forEach((name) => {
+                const record = items.find(item => 
+                    (item.Technician || item.Title || '').toLowerCase() === name.toLowerCase()
+                );
+                if (record) {
+                    const statusText = record.Status || 'Available';
+                    const lowerStatus = statusText.toLowerCase();
+                    const state = lowerStatus.includes('busy') ? 'busy' :
+                                  lowerStatus.includes('tentative') ? 'tentative' : 'available';
+                    setStatus(name, state, statusText);
+                } else {
+                    setStatus(name, 'unknown', 'Not Listed');
+                }
+            });
+            availabilityInfo.textContent = `Last updated ${new Date().toLocaleTimeString()}`;
+        } catch (err) {
+            console.error('Availability Fetch Failed:', err);
+            availabilityInfo.textContent = 'Could not load live availability from SharePoint.';
+            IT_NAMES.forEach((name) => setStatus(name, 'unknown', 'Error'));
+        }
+    }
+    configToggleBtn.addEventListener('click', () => configModal.classList.remove('hidden'));
+    closeConfigBtn.addEventListener('click', () => configModal.classList.add('hidden'));
+    saveConfigBtn.addEventListener('click', () => configModal.classList.add('hidden'));
+    closeSuccessBtn.addEventListener('click', () => successModal.classList.add('hidden'));
+    refreshAvailabilityBtn.addEventListener('click', refreshAvailability);
+    ticketForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-sm"></i> <span>Submitting...</span>`;
+        const payload = {
+            issueDescription: document.getElementById('issueDescription').value,
+            department: document.getElementById('department').value,
+            buildingRoom: document.getElementById('buildingRoom').value,
+            preferredContact: document.getElementById('preferredContact').value,
+            submittedAt: new Date().toISOString()
+        };
+        if (TICKET_FLOW_URL && TICKET_FLOW_URL !== 'YOUR_TICKET_SUBMISSION_URL_HERE') {
+            try {
+                const res = await fetch(TICKET_FLOW_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    ticketForm.reset();
+                    successModal.classList.remove('hidden');
+                } else {
+                    alert('Flow trigger responded with an error.');
+                }
+            } catch (err) {
+                console.error('Submission error:', err);
+                alert('Could not connect to Power Automate.');
+            }
+        } else {
+            setTimeout(() => {
+                ticketForm.reset();
+                successModal.classList.remove('hidden');
+            }, 800);
+        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Submit Request</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+    });
+    refreshAvailability();
+    setInterval(refreshAvailability, 300000);
+</script>
+</body>
+</html>
