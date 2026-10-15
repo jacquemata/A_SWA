@@ -64,7 +64,7 @@
         <div class="bg-white/70 border border-gray-200/80 rounded-xl p-4 mb-6 shadow-sm">
             <div class="flex items-center justify-between mb-2">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-700">
-                    Current IT Availability <span class="text-xs text-blue-800 font-normal">(Outlook 365)</span>
+                    Current IT Availability <span class="text-xs text-green-800 font-normal">(Live)</span>
                 </h2>
                 <div class="flex items-center gap-2">
                     <button id="refreshAvailabilityBtn" title="Refresh Availability" class="text-gray-400 hover:text-blue-900 text-xs">
@@ -216,285 +216,136 @@
     </div>
 
     <script>
-        const STORAGE_KEY = 'ONO_IT_FLOW_URL';
-        const TENANT_STORAGE_KEY = 'ONO_IT_M365_TENANT_ID';
-        const CLIENT_STORAGE_KEY = 'ONO_IT_M365_CLIENT_ID';
-        const EMAILS_STORAGE_KEY = 'ONO_IT_M365_IT_EMAILS';
-
-        const ticketForm = document.getElementById('ticketForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const successModal = document.getElementById('successModal');
-        const closeSuccessBtn = document.getElementById('closeSuccessBtn');
-        const configModal = document.getElementById('configModal');
-        const configToggleBtn = document.getElementById('configToggleBtn');
-        const refreshAvailabilityBtn = document.getElementById('refreshAvailabilityBtn');
-        const availabilityInfo = document.getElementById('availabilityInfo');
-        const webhookUrlInput = document.getElementById('webhookUrlInput');
-        const tenantIdInput = document.getElementById('tenantIdInput');
-        const clientIdInput = document.getElementById('clientIdInput');
-        const itEmailsInput = document.getElementById('itEmailsInput');
-        const saveConfigBtn = document.getElementById('saveConfigBtn');
-        const closeConfigBtn = document.getElementById('closeConfigBtn');
-
-        const IT_NAMES = ['Darin', 'Jacque'];
-
-        function getCalendarEmails() {
-            const raw = localStorage.getItem(EMAILS_STORAGE_KEY) || '';
-            const configured = raw.split(',').map((value) => value.trim()).filter(Boolean);
-            return IT_NAMES.map((name, index) => configured[index] || name);
-        }
-
-        function setStatus(person, state, detail = '') {
-            const dot = document.getElementById(`${person.toLowerCase()}Dot`);
-            const statusEl = document.getElementById(`${person.toLowerCase()}Status`);
-
-            const styles = {
-                available: {
-                    dot: 'bg-green-500 pulse-dot',
-                    badge: 'text-green-700 bg-green-50 border-green-200',
-                    icon: 'fa-circle-check text-green-600',
-                    text: detail || 'Available'
-                },
-                busy: {
-                    dot: 'bg-red-500',
-                    badge: 'text-red-700 bg-red-50 border-red-200',
-                    icon: 'fa-calendar-xmark text-red-600',
-                    text: detail || 'Busy'
-                },
-                tentative: {
-                    dot: 'bg-yellow-500',
-                    badge: 'text-yellow-700 bg-yellow-50 border-yellow-200',
-                    icon: 'fa-clock text-yellow-600',
-                    text: detail || 'Tentative'
-                },
-                unknown: {
-                    dot: 'bg-gray-400',
-                    badge: 'text-gray-700 bg-gray-50 border-gray-200',
-                    icon: 'fa-circle-question text-gray-500',
-                    text: detail || 'Unknown'
-                }
-            };
-
-            const selected = styles[state] || styles.unknown;
-            dot.className = `w-2.5 h-2.5 rounded-full ${selected.dot}`;
-            statusEl.className = `inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md border ${selected.badge}`;
-            statusEl.innerHTML = `<i class="fa-solid ${selected.icon}"></i> ${selected.text}`;
-        }
-
-        function mapAvailabilityCode(code) {
-            switch (code) {
-                case '0':
-                    return { state: 'available', text: 'Available' };
-                case '1':
-                    return { state: 'tentative', text: 'Tentative' };
-                case '2':
-                case '3':
-                    return { state: 'busy', text: 'Busy' };
-                case '4':
-                    return { state: 'available', text: 'Working Elsewhere' };
-                default:
-                    return { state: 'unknown', text: 'Unknown' };
+    // Paste your Power Automate HTTP GET URL here once created
+    const AVAILABILITY_FLOW_URL = 'YOUR_POWER_AUTOMATE_HTTP_GET_URL_HERE';
+    const TICKET_FLOW_URL = 'YOUR_TICKET_SUBMISSION_URL_HERE';
+    const ticketForm = document.getElementById('ticketForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const successModal = document.getElementById('successModal');
+    const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+    const configModal = document.getElementById('configModal');
+    const configToggleBtn = document.getElementById('configToggleBtn');
+    const refreshAvailabilityBtn = document.getElementById('refreshAvailabilityBtn');
+    const availabilityInfo = document.getElementById('availabilityInfo');
+    const webhookUrlInput = document.getElementById('webhookUrlInput');
+    const availabilityFlowUrlInput = document.getElementById('availabilityFlowUrlInput');
+    const saveConfigBtn = document.getElementById('saveConfigBtn');
+    const closeConfigBtn = document.getElementById('closeConfigBtn');
+    const IT_NAMES = ['Darin', 'Jacque'];
+    function setStatus(person, state, detail = '') {
+        const dot = document.getElementById(`${person.toLowerCase()}Dot`);
+        const statusEl = document.getElementById(`${person.toLowerCase()}Status`);
+        const styles = {
+            available: {
+                dot: 'bg-green-500 pulse-dot',
+                badge: 'text-green-700 bg-green-50 border-green-200',
+                icon: 'fa-circle-check text-green-600',
+                text: detail || 'Available'
+            },
+            busy: {
+                dot: 'bg-red-500',
+                badge: 'text-red-700 bg-red-50 border-red-200',
+                icon: 'fa-calendar-xmark text-red-600',
+                text: detail || 'Busy'
+            },
+            tentative: {
+                dot: 'bg-yellow-500',
+                badge: 'text-yellow-700 bg-yellow-50 border-yellow-200',
+                icon: 'fa-clock text-yellow-600',
+                text: detail || 'Tentative'
+            },
+            unknown: {
+                dot: 'bg-gray-400',
+                badge: 'text-gray-700 bg-gray-50 border-gray-200',
+                icon: 'fa-circle-question text-gray-500',
+                text: detail || 'Unknown'
             }
-        }
-
-        async function acquireGraphToken() {
-            const tenantId = localStorage.getItem(TENANT_STORAGE_KEY);
-            const clientId = localStorage.getItem(CLIENT_STORAGE_KEY);
-
-            if (!tenantId || !clientId) {
-                throw new Error('missing_m365_config');
+        };
+        const selected = styles[state] || styles.unknown;
+        dot.className = `w-2.5 h-2.5 rounded-full ${selected.dot}`;
+        statusEl.className = `inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-md border ${selected.badge}`;
+        statusEl.innerHTML = `<i class="fa-solid ${selected.icon}"></i> ${selected.text}`;
+    }
+    async function refreshAvailability() {
+        IT_NAMES.forEach((name) => setStatus(name, 'unknown', 'Checking...'));
+        const targetUrl = AVAILABILITY_FLOW_URL !== 'YOUR_POWER_AUTOMATE_HTTP_GET_URL_HERE'
+            ? AVAILABILITY_FLOW_URL
+            : "https://ttuhscprod.sharepoint.com/sites/msteams_636f5b/_api/web/lists/getbytitle('IT Availability')/items";
+        try {
+            const response = await fetch(targetUrl, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json;odata=verbose' }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
-
-            const msalClient = new msal.PublicClientApplication({
-                auth: {
-                    clientId,
-                    authority: `https://login.microsoftonline.com/${tenantId}`
+            const data = await response.json();
+            const items = data.d ? data.d.results : (Array.isArray(data) ? data : (data.value || []));
+            IT_NAMES.forEach((name) => {
+                const record = items.find(item => 
+                    (item.Technician || item.Title || '').toLowerCase() === name.toLowerCase()
+                );
+                if (record) {
+                    const statusText = record.Status || 'Available';
+                    const lowerStatus = statusText.toLowerCase();
+                    const state = lowerStatus.includes('busy') ? 'busy' :
+                                  lowerStatus.includes('tentative') ? 'tentative' : 'available';
+                    setStatus(name, state, statusText);
+                } else {
+                    setStatus(name, 'unknown', 'Not Listed');
                 }
             });
-
-            const loginRequest = {
-                scopes: ['User.Read', 'Calendars.Read']
-            };
-
-            let account = msalClient.getAllAccounts()[0];
-            if (!account) {
-                const loginResponse = await msalClient.loginPopup(loginRequest);
-                account = loginResponse.account;
-            }
-
-            const tokenResponse = await msalClient.acquireTokenPopup({
-                ...loginRequest,
-                account
-            });
-
-            return tokenResponse.accessToken;
+            availabilityInfo.textContent = `Last updated ${new Date().toLocaleTimeString()}`;
+        } catch (err) {
+            console.error('Availability Fetch Failed:', err);
+            availabilityInfo.textContent = 'Could not load live availability from SharePoint.';
+            IT_NAMES.forEach((name) => setStatus(name, 'unknown', 'Error'));
         }
-
-        async function refreshAvailability() {
-            IT_NAMES.forEach((name) => setStatus(name, 'unknown', 'Checking...'));
-
-            let token;
+    }
+    configToggleBtn.addEventListener('click', () => configModal.classList.remove('hidden'));
+    closeConfigBtn.addEventListener('click', () => configModal.classList.add('hidden'));
+    saveConfigBtn.addEventListener('click', () => configModal.classList.add('hidden'));
+    closeSuccessBtn.addEventListener('click', () => successModal.classList.add('hidden'));
+    refreshAvailabilityBtn.addEventListener('click', refreshAvailability);
+    ticketForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-sm"></i> <span>Submitting...</span>`;
+        const payload = {
+            issueDescription: document.getElementById('issueDescription').value,
+            department: document.getElementById('department').value,
+            buildingRoom: document.getElementById('buildingRoom').value,
+            preferredContact: document.getElementById('preferredContact').value,
+            submittedAt: new Date().toISOString()
+        };
+        if (TICKET_FLOW_URL && TICKET_FLOW_URL !== 'YOUR_TICKET_SUBMISSION_URL_HERE') {
             try {
-                token = await acquireGraphToken();
-            } catch (err) {
-                const message = err.message === 'missing_m365_config'
-                    ? 'Add Tenant ID and App ID in settings to load Outlook 365 availability.'
-                    : 'Could not authenticate with Microsoft 365. Check app permissions.';
-                availabilityInfo.textContent = message;
-                IT_NAMES.forEach((name) => setStatus(name, 'unknown'));
-                return;
-            }
-
-            const emails = getCalendarEmails();
-            const hasValidEmails = emails.every((value) => value.includes('@'));
-            if (!hasValidEmails) {
-                availabilityInfo.textContent = 'Add IT calendar email addresses in settings to load Outlook 365 availability.';
-                IT_NAMES.forEach((name) => setStatus(name, 'unknown'));
-                return;
-            }
-            const now = new Date();
-            const later = new Date(now.getTime() + 30 * 60000);
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-
-            try {
-                const response = await fetch('https://graph.microsoft.com/v1.0/me/calendar/getSchedule', {
+                const res = await fetch(TICKET_FLOW_URL, {
                     method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        schedules: emails,
-                        startTime: {
-                            dateTime: now.toISOString(),
-                            timeZone: timezone
-                        },
-                        endTime: {
-                            dateTime: later.toISOString(),
-                            timeZone: timezone
-                        },
-                        availabilityViewInterval: 30
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
-
-                if (!response.ok) {
-                    throw new Error('graph_query_failed');
-                }
-
-                const data = await response.json();
-                const values = data.value || [];
-
-                IT_NAMES.forEach((name, index) => {
-                    const schedule = values[index] || {};
-                    const code = (schedule.availabilityView || '').charAt(0);
-                    const mapped = mapAvailabilityCode(code);
-                    setStatus(name, mapped.state, mapped.text);
-                });
-
-                availabilityInfo.textContent = `Last updated ${new Date().toLocaleString()}`;
-            } catch (err) {
-                console.error('Availability refresh failed:', err);
-                availabilityInfo.textContent = 'Could not load availability from Outlook 365 right now.';
-                IT_NAMES.forEach((name) => setStatus(name, 'unknown'));
-            }
-        }
-
-        configToggleBtn.addEventListener('click', () => {
-            webhookUrlInput.value = localStorage.getItem(STORAGE_KEY) || '';
-            tenantIdInput.value = localStorage.getItem(TENANT_STORAGE_KEY) || '';
-            clientIdInput.value = localStorage.getItem(CLIENT_STORAGE_KEY) || '';
-            itEmailsInput.value = localStorage.getItem(EMAILS_STORAGE_KEY) || '';
-            configModal.classList.remove('hidden');
-        });
-
-        closeConfigBtn.addEventListener('click', () => configModal.classList.add('hidden'));
-
-        saveConfigBtn.addEventListener('click', () => {
-            const webhookUrl = webhookUrlInput.value.trim();
-            const tenantId = tenantIdInput.value.trim();
-            const clientId = clientIdInput.value.trim();
-            const emails = itEmailsInput.value.trim();
-
-            if (webhookUrl) {
-                localStorage.setItem(STORAGE_KEY, webhookUrl);
-            } else {
-                localStorage.removeItem(STORAGE_KEY);
-            }
-
-            if (tenantId) {
-                localStorage.setItem(TENANT_STORAGE_KEY, tenantId);
-            } else {
-                localStorage.removeItem(TENANT_STORAGE_KEY);
-            }
-
-            if (clientId) {
-                localStorage.setItem(CLIENT_STORAGE_KEY, clientId);
-            } else {
-                localStorage.removeItem(CLIENT_STORAGE_KEY);
-            }
-
-            if (emails) {
-                localStorage.setItem(EMAILS_STORAGE_KEY, emails);
-            } else {
-                localStorage.removeItem(EMAILS_STORAGE_KEY);
-            }
-
-            configModal.classList.add('hidden');
-            refreshAvailability();
-        });
-
-        closeSuccessBtn.addEventListener('click', () => {
-            successModal.classList.add('hidden');
-        });
-
-        refreshAvailabilityBtn.addEventListener('click', refreshAvailability);
-
-        ticketForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-sm"></i> <span>Submitting...</span>`;
-
-            const payload = {
-                issueDescription: document.getElementById('issueDescription').value,
-                department: document.getElementById('department').value,
-                buildingRoom: document.getElementById('buildingRoom').value,
-                preferredContact: document.getElementById('preferredContact').value,
-                submittedAt: new Date().toISOString()
-            };
-
-            const flowUrl = localStorage.getItem(STORAGE_KEY);
-
-            if (flowUrl) {
-                try {
-                    const res = await fetch(flowUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (res.ok) {
-                        ticketForm.reset();
-                        successModal.classList.remove('hidden');
-                    } else {
-                        alert('Flow trigger responded with an error. Please verify your Power Automate URL.');
-                    }
-                } catch (err) {
-                    console.error('Submission error:', err);
-                    alert('Could not connect to Power Automate. Please check network/URL settings.');
-                }
-            } else {
-                setTimeout(() => {
+                if (res.ok) {
                     ticketForm.reset();
                     successModal.classList.remove('hidden');
-                }, 800);
+                } else {
+                    alert('Flow trigger responded with an error.');
+                }
+            } catch (err) {
+                console.error('Submission error:', err);
+                alert('Could not connect to Power Automate.');
             }
-
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = `<span>Submit Request</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
-        });
-
-        refreshAvailability();
-    </script>
+        } else {
+            setTimeout(() => {
+                ticketForm.reset();
+                successModal.classList.remove('hidden');
+            }, 800);
+        }
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Submit Request</span> <i class="fa-solid fa-arrow-right text-xs"></i>`;
+    });
+    refreshAvailability();
+    setInterval(refreshAvailability, 300000);
+</script>
 </body>
 </html>
